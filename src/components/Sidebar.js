@@ -39,7 +39,7 @@ class Sidebar extends React.Component {
                     theme="dark"
                 >
                 {/* 取route[0] 导航栏省略外层App组件 */}
-                { this.nested(routes[0].routes) }
+                { this.nested(routes[0].routes[0].routes) }
                 </Menu>
             </div>
         );

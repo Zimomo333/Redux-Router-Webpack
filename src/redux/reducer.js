@@ -1,4 +1,4 @@
-import { LOGIN,GET_INFO,LOGOUT } from './action'
+import { LOGIN, GET_INFO, LOGOUT } from './actionTypes'
 import { getToken } from '../utils/auth'
 
 const initialState = {

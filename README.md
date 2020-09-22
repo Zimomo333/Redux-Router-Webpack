@@ -35,6 +35,7 @@ npm i redux-actions -S  // 异步Actions中间件
 npm i redux-promise -S  // Promise中间件
 
 npm i axios -S
+npm i js-cookie -S
 
 npm i webpack webpack-cli webpack-dev-server -D         //server用于运行打包后的dist资源
 
@@ -349,6 +350,21 @@ class Sidebar extends React.Component {
 
 export default Sidebar
 ```
+
+
+
+## Redux
+
+#### actionTypes
+
+action type 常量，若写在action.js里会报错：Cannot access 'LOGIN' before initialization
+
+![](C:\zimomo\React\redux-router-webpack\picture\actionTypes.PNG)
+
+#### 解决方法：
+
+1. 将action type 常量提取到一个js文件再import
+2. let和const不会变量提升，可用var声明
 
 
 
