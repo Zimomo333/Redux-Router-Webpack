@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { HashRouter } from "react-router-dom";
-import renderRoutes from './utils/renderRoutesGuard';
+import renderRoutes from './utils/renderRoutesGuard';   // 重写renderRoutes方法，增加路由权限拦截功能
 import routes from './router'
 
 import 'antd/dist/antd.css';

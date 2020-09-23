@@ -7,7 +7,7 @@ import Submit from './views/orders/submit'
 import Login from './views/login'
 
 const routes = [
-    {                       // /login 必须放在 / 之前，要先渲染出<Route path="/" component={ LOGIN }></Route>，再渲染<Redirect to="/login" />
+    {   // /login 必须放在 / 之前，要先渲染出<Route path="/" component={ LOGIN }></Route>，再渲染<Redirect to="/login" />
         path: '/login',
         component: Login
     },
