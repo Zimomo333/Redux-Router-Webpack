@@ -1,4 +1,4 @@
-# React-Router-Webpack 模块化开发
+# Redux-Router-Webpack 模块化开发
 
 ### 项目目的
 
@@ -8,18 +8,24 @@
 
 ### 项目功能
 
-1. 导航栏（折叠）
-2. 面包屑
-3. 正文区域
+1. 登录权限验证
+
+2. 导航栏（折叠）
+
+3. 面包屑
+
+4. 正文区域
 
 
 
 ### 项目依赖
 
 1. React
-2. React Router
-3. Ant Design
-4. webpack
+2. React Router（react-router-dom、react-router-config）
+3. Redux（中间件redux-promise、redux-actions）
+4. axios异步请求、js-cookie操作Cookies
+5. Ant Design
+6. webpack（@babel/preset-react，jsx转译器）
 
 ```shell
 npm init
@@ -31,7 +37,6 @@ npm i react-router-dom -S		// 核心库
 npm i react-router-config -S	// 官方路由配置助手(类似Vue Router，集中配置式路由)
 
 npm i redux -S
-npm i redux-thunk -S    // 让dispatch可接收function
 npm i redux-promise -S  // 让dispatch可接收Promise
 npm i redux-actions -S  // 异步Actions中间件
 
@@ -52,23 +57,44 @@ npm i html-webpack-plugin -D                //自动生成注入js的index.html
 
 ### 目录结构
 
-<div><img src="https://raw.githubusercontent.com/Zimomo333/React-Router-Webpack/master/picture/directory.PNG"></div>
+<div><img src="https://raw.githubusercontent.com/Zimomo333/Redux-Router-Webpack/master/picture/directory.PNG"></div>
 
-结构说明：
+#### 结构说明：
 
 | 文件/目录名         | 作用                                         |
 | ------------------- | -------------------------------------------- |
 | `webpack.config.js` | `webpack` 配置文件                           |
 | `routes.js`         | `React Router Config` 集中配置式路由文件     |
 | `index.js`          | `React`渲染入口，全局配置，`webpack`打包入口 |
-| `App.js`            | 根组件                                       |
 | `public/index.html` | `HtmlWebpackPlugin` 自定义`index.html` 模板  |
 | `views`目录         | 页面组件（业务页面）                         |
-| `components`目录    | 公用组件（导航栏、面包屑）                   |
+| `components`目录    | 公用组件（导航栏）                   |
+| `api`目录  | 请求接口目录                                |
 | `dist`目录          | `webpack`打包输出目录                        |
 | `node_modules`目录  | `npm` 模块下载目录                           |
 
+#### utils/
 
+| `request.js`         | 二次封装axios，错误码处理，header设置token |
+| -------------------- | ------------------------------------------ |
+| `auth.js`            | Cookies、localStorage 操作                 |
+| renderRoutesGuard.js | 重写renderRoutes方法，增加路由权限拦截功能 |
+
+#### redux/
+
+| actionTypes.js | Action type 常量 |
+| -------------- | ---------------- |
+| action.js      | Action Creator   |
+| reducer.js     | Action具体操作   |
+| store.js       | 初始化Store      |
+
+
+
+
+
+
+
+## React-Router
 
 ### index.js
 
@@ -76,7 +102,7 @@ npm i html-webpack-plugin -D                //自动生成注入js的index.html
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { HashRouter } from "react-router-dom";
-import { renderRoutes } from 'react-router-config';     // 官方路由配置助手(类似Vue Router，集中式配置)
+import renderRoutes from './utils/renderRoutesGuard';   // 重写renderRoutes方法，增加路由权限拦截功能
 import routes from './router'
 
 import 'antd/dist/antd.css';
@@ -92,20 +118,90 @@ ReactDOM.render(
 
 
 
+### renderRoutesGuard.js
+
+重写renderRoutes方法，增加路由权限拦截功能
+
+```react
+import store from '../redux/store'
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { Route, Redirect, Switch } from 'react-router-dom'
+
+function _extends() {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+  
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+  
+      return target;
+    };
+  
+    return _extends.apply(this, arguments);
+}
+
+export default function renderRoutes(routes, extraProps, switchProps) {
+    if (extraProps === void 0) {
+      extraProps = {};
+    }
+  
+    if (switchProps === void 0) {
+      switchProps = {};
+    }
+  
+    return routes ? React.createElement(Switch, switchProps, routes.map(function (route, i) {   //reactRouter.Switch 改 Switch
+      return React.createElement(Route, {
+        key: route.key || i,
+        path: route.path,
+        exact: route.exact,
+        strict: route.strict,
+        render: function render(props) {
+          // 若已登录 或 为登陆页面 则渲染组件
+          if( typeof(store.getState().token) !== 'undefined' || route.path === '/login' ){
+            return route.render ? route.render(_extends({}, props, {}, extraProps, {
+                route: route
+            })) : React.createElement(route.component, _extends({}, props, extraProps, {
+                route: route
+            }));
+          } else {
+            // 若未登录，上一步if只渲染了<Route path="/" component={ LOGIN }></Route>，
+            // 最后渲染<Redirect to="/login" />，相当于重定向到LOGIN组件
+            return <Redirect to="/login" />
+          }
+        }
+      });
+    })) : null;
+}
+```
+
+
+
 ### router.js
 
 ```javascript
 import { ProfileOutlined, UserOutlined } from '@ant-design/icons';
-import React, { PureComponent } from 'react'
-import App from './App'
+import Home from './views/home'
 import Info from './views/Info'
 import Orders from './views/orders/index'
 import MyOrders from './views/orders/myOrders'
 import Submit from './views/orders/submit'
+import Login from './views/login'
 
 const routes = [
+    {   // /login 必须放在 / 之前，要先渲染出<Route path="/" component={ LOGIN }></Route>，
+        // 再渲染<Redirect to="/login" />
+        path: '/login',
+        component: Login
+    },
     {
-        component: App,
+        path: '/',
+        component: Home,
         routes: [
             {
                 path: '/info',
@@ -141,6 +237,115 @@ export default routes
 ```
 
 
+
+
+
+
+
+## Redux
+
+#### actionTypes.js
+
+action type 常量，若写在action.js里会报错：Cannot access 'LOGIN' before initialization
+
+<div align=center><img src="https://raw.githubusercontent.com/Zimomo333/Redux-Router-Webpack/master/picture/actionTypes.PNG"></div>
+
+#### 解决方法：
+
+1. 将action type 常量提取到一个js文件再import
+2. let和const不会变量提升，可用var声明
+
+
+
+#### action.js
+
+使用中间件编写Action Creator
+
+1. 若只使用redux-promise中间件，Action为Promise对象
+
+2. 使用redux-actions简化，payload为Promise对象，promiseMiddleware会调用then取里面的值，然后重新dispatch(action)
+
+```react
+import { loginApi, logoutApi, getInfoApi } from '../api/user'
+import { LOGIN, GET_INFO, LOGOUT } from './actionTypes'     // 必须将action type 常量提取到一个js文件，若写在action.js里会报错：Cannot access 'LOGIN' before initialization
+import { getToken, setToken, removeToken, setUserInfo, removeUserInfo } from '../utils/auth'
+import { createAction } from 'redux-actions';
+
+// 只使用redux-promise中间件，Action为Promise对象
+// export const login = (loginForm) => {
+//     const { username, password } = loginForm
+//     return new Promise((resolve, reject) => 
+//         loginApi({ username: username.trim(), password: password }).then(response => {
+//             const { data } = response
+//             setToken(data.token)
+//             resolve({
+//                 type: LOGIN,
+//                 token: data.token
+//             })
+//         }).catch(error => {
+//             reject(error)
+//         })
+//     )
+// }
+
+// 使用redux-actions简化，payload为Promise对象
+export const login = (loginForm) => {
+    const { username, password } = loginForm
+    return createAction(
+        LOGIN,
+        () => {     // payload 为 Promise对象，promiseMiddleware会调用then取里面的值，然后重新dispatch(action)
+            return loginApi({ username: username.trim(), password: password }).then( response =>{
+                const { data } = response
+                setToken(data.token)
+                return data.token
+            })
+        }
+    )
+}
+
+export const getInfo = createAction(
+    GET_INFO,
+    () => {
+        return getInfoApi(getToken()).then(response => {
+            const { data:{ userInfo } } = response
+            setUserInfo(userInfo)
+            return userInfo
+        })
+    }
+)
+
+export const logout = createAction(
+    LOGOUT,
+    () => {
+        return logoutApi(getToken()).then(() => {
+            removeToken()
+            removeUserInfo()
+            return null
+        })
+    }
+)
+```
+
+
+
+#### store.js
+
+```react
+import { createStore, applyMiddleware } from 'redux';
+import promiseMiddleware from 'redux-promise';
+import reducer from './reducer';
+
+const store = createStore(
+  reducer,
+  applyMiddleware(promiseMiddleware)  // redux-actions的必要依赖
+); 
+
+export default store
+```
+
+
+
+## Webpack
 
 ### webpack.config.js
 
@@ -193,8 +398,6 @@ module.exports = {
 
 
 
-
-
 ### `public/index.html`模板
 
 默认生成的`index.html `没有 id="root" 挂载点，必须使用自定义模板
@@ -215,7 +418,11 @@ module.exports = {
 
 
 
-### App.js
+
+
+## 组件
+
+### home.js
 
 从父路由传来的prop.location中获取当前路径
 
@@ -225,14 +432,19 @@ matchRoutes方法 根据当前路径，获取 路由匹配历史 数组，用以
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import { matchRoutes, renderRoutes } from 'react-router-config';
+import { matchRoutes } from 'react-router-config';
+import renderRoutes from '../utils/renderRoutesGuard';
 import { Link } from "react-router-dom";
-import routes from './router'
+import routes from '../router'
 
-import { MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
-import Sidebar from './components/Sidebar'
-import { Breadcrumb } from 'antd';
-import './App.css'
+import store from '../redux/store'
+import { logout } from '../redux/action'
+import { createHashHistory } from 'history';
+
+import { MenuUnfoldOutlined, MenuFoldOutlined, DownOutlined } from '@ant-design/icons';
+import Sidebar from '../components/Sidebar'
+import { Breadcrumb, Menu, Dropdown, Button } from 'antd';
+import './home.css'
 
 import { Layout } from 'antd';
 const { Header, Sider, Content } = Layout;
@@ -241,12 +453,28 @@ export default class App extends React.Component {
     state = {
         collapsed: false
     };
-    
+
     toggle = () => {
         this.setState({
             collapsed: !this.state.collapsed
         });
     };
+
+    onClicklogout = () => {
+        store.dispatch(logout()).then(()=> {
+            createHashHistory().push('/login');
+        })
+    }
+
+    menu = (
+        <Menu>
+          <Menu.Item>
+            <a target="_blank" rel="noopener noreferrer" onClick={this.onClicklogout}>
+              退出登录
+            </a>
+          </Menu.Item>
+        </Menu>
+    );
 
     render() {
         // 从父路由传来的prop.location中获取当前路径
@@ -275,6 +503,9 @@ export default class App extends React.Component {
                                     )
                                 }
                             </Breadcrumb>
+                            <Dropdown overlay={this.menu} >
+                                <Button style={{ float: "right", margin: "15px 15px 0 0", backgroundColor: "black",color: "white" }}>菜单<DownOutlined /></Button>
+                            </Dropdown>
                         </Header>
                         <Content
                             className="site-layout-background"
@@ -342,7 +573,7 @@ class Sidebar extends React.Component {
                     theme="dark"
                 >
                 {/* 取route[0] 导航栏省略外层App组件 */}
-                { this.nested(routes[0].routes) }
+                { this.nested(routes[1].routes) }
                 </Menu>
             </div>
         );
@@ -354,21 +585,10 @@ export default Sidebar
 
 
 
-## Redux
 
-#### actionTypes
-
-action type 常量，若写在action.js里会报错：Cannot access 'LOGIN' before initialization
-
-![](C:\zimomo\React\redux-router-webpack\picture\actionTypes.PNG)
-
-#### 解决方法：
-
-1. 将action type 常量提取到一个js文件再import
-2. let和const不会变量提升，可用var声明
 
 
 
 ### 项目展示
 
-<div align=center><img src="https://raw.githubusercontent.com/Zimomo333/React-Router-Webpack/master/picture/display.gif"></div>
+<div align=center><img src="https://raw.githubusercontent.com/Zimomo333/Redux-Router-Webpack/master/picture/display.gif"></div>
