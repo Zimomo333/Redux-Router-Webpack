@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { HashRouter } from "react-router-dom";
-import { renderRoutes } from 'react-router-config';     // 官方路由配置助手(类似Vue Router，集中式配置)
+import renderRoutes from './utils/renderRoutesGuard';
 import routes from './router'
 
 import 'antd/dist/antd.css';

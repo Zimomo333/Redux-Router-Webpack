@@ -4,6 +4,8 @@ import { Form, Input, Button } from 'antd';
 import { login } from '../redux/action'
 import store from '../redux/store'
 
+import { createHashHistory } from 'history';
+
 const layout = {
     labelCol: {
         offset: 7,
@@ -23,7 +25,9 @@ const tailLayout = {
 export default class Login extends React.Component {
 
     onFinish = (values) => {
-      store.dispatch(login(values));
+      store.dispatch(login(values)()).then(()=>{    // 注意二次封装函数调用方式，login(values)()
+        createHashHistory().push('/')
+      })
     };
     
     onFinishFailed = (errorInfo) => {
@@ -32,7 +36,7 @@ export default class Login extends React.Component {
 
     render() {
         return (
-            <div>
+            <div style={{ paddingTop: "150px" }}>
               <h3 style={{ textAlign: "center" }}>Login</h3>
               <Form
               {...layout}

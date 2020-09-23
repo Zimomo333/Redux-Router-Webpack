@@ -1,10 +1,10 @@
 import { LOGIN, GET_INFO, LOGOUT } from './actionTypes'
-import { getToken } from '../utils/auth'
+import { getToken, getUserInfo } from '../utils/auth'
 
 const initialState = {
     token: getToken(),
-    name: '',
-    avatar: ''
+    name: getUserInfo() == null ? '' : getUserInfo().name,
+    avatar: getUserInfo() == null ? '' : getUserInfo().avatar
 };
 
 export default function reducer(state = initialState, action) {
@@ -12,20 +12,20 @@ export default function reducer(state = initialState, action) {
     switch(action.type) {
         case LOGIN:
             return Object.assign({}, state, {
-                token: action.token 
+                token: action.payload 
             })
             break
         case GET_INFO:
             return Object.assign({}, state, {
-                name: action.userInfo.name,
-                avatar: action.userInfo.avatar
+                name: action.payload.name,
+                avatar: action.payload.avatar
             })
             break
         case LOGOUT:
             return Object.assign({}, state, {
-                token: '',
-                name: '',
-                avatar: ''
+                token: undefined,
+                name: undefined,
+                avatar: undefined
             })
         default:
             return state

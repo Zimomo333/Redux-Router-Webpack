@@ -31,8 +31,9 @@ npm i react-router-dom -S		// 核心库
 npm i react-router-config -S	// 官方路由配置助手(类似Vue Router，集中配置式路由)
 
 npm i redux -S
+npm i redux-thunk -S    // 让dispatch可接收function
+npm i redux-promise -S  // 让dispatch可接收Promise
 npm i redux-actions -S  // 异步Actions中间件
-npm i redux-promise -S  // Promise中间件
 
 npm i axios -S
 npm i js-cookie -S

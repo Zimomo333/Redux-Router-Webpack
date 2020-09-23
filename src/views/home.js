@@ -1,13 +1,18 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import { matchRoutes, renderRoutes } from 'react-router-config';
+import { matchRoutes } from 'react-router-config';
+import renderRoutes from '../utils/renderRoutesGuard';
 import { Link } from "react-router-dom";
 import routes from '../router'
 
-import { MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
+import store from '../redux/store'
+import { logout } from '../redux/action'
+import { createHashHistory } from 'history';
+
+import { MenuUnfoldOutlined, MenuFoldOutlined, DownOutlined } from '@ant-design/icons';
 import Sidebar from '../components/Sidebar'
-import { Breadcrumb } from 'antd';
+import { Breadcrumb, Menu, Dropdown, Button } from 'antd';
 import './home.css'
 
 import { Layout } from 'antd';
@@ -17,12 +22,28 @@ export default class App extends React.Component {
     state = {
         collapsed: false
     };
-    
+
     toggle = () => {
         this.setState({
             collapsed: !this.state.collapsed
         });
     };
+
+    onClicklogout = () => {
+        store.dispatch(logout()).then(()=> {
+            createHashHistory().push('/login');
+        })
+    }
+
+    menu = (
+        <Menu>
+          <Menu.Item>
+            <a target="_blank" rel="noopener noreferrer" onClick={this.onClicklogout}>
+              退出登录
+            </a>
+          </Menu.Item>
+        </Menu>
+    );
 
     render() {
         // 从父路由传来的prop.location中获取当前路径
@@ -51,6 +72,9 @@ export default class App extends React.Component {
                                     )
                                 }
                             </Breadcrumb>
+                            <Dropdown overlay={this.menu} >
+                                <Button style={{ float: "right", margin: "15px 15px 0 0", backgroundColor: "black",color: "white" }}>菜单<DownOutlined /></Button>
+                            </Dropdown>
                         </Header>
                         <Content
                             className="site-layout-background"
