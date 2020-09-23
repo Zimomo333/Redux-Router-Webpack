@@ -2,19 +2,18 @@
 
 ### 项目目的
 
-不使用create-react-app，从头搭建模块化开发环境
+不使用create-react-app，从头搭建 `React` 模块化开发环境
 
 
 
 ### 项目功能
 
-1. 登录权限验证
-
-2. 导航栏（折叠）
-
-3. 面包屑
-
-4. 正文区域
+1. 导航栏（折叠）
+2. 面包屑
+3. React-Router（路由、拦截功能）
+4. Redux（中心化登录权限）
+5. token存入Cookie，用户信息存入localStorage
+6. Wepack打包压缩，热加载本地服务器
 
 
 
@@ -37,20 +36,20 @@ npm i react-router-dom -S		// 核心库
 npm i react-router-config -S	// 官方路由配置助手(类似Vue Router，集中配置式路由)
 
 npm i redux -S
-npm i redux-promise -S  // 让dispatch可接收Promise
+npm i redux-promise -S  // 让store.dispatch可接收Promise
 npm i redux-actions -S  // 异步Actions中间件
 
 npm i axios -S
 npm i js-cookie -S
 
-npm i webpack webpack-cli webpack-dev-server -D         //server用于运行打包后的dist资源
+npm i webpack webpack-cli webpack-dev-server -D         // 热加载本地server，用于运行打包后的dist资源
 
 <!-- webpack loader -->
-npm i babel-loader @babel/core @babel/preset-env @babel/preset-react	//解析jsx语法
-npm i css-loader style-loader -D            //解析 antd 的CSS文件
+npm i babel-loader @babel/core @babel/preset-env @babel/preset-react	// 解析jsx语法
+npm i css-loader style-loader -D            // 解析 antd 的CSS文件
 
 <!-- webpack plugin -->
-npm i html-webpack-plugin -D                //自动生成注入js的index.html
+npm i html-webpack-plugin -D                // 自动生成注入js的index.html
 ```
 
 
@@ -244,7 +243,7 @@ export default routes
 
 ## Redux
 
-#### actionTypes.js
+### actionTypes.js
 
 action type 常量，若写在action.js里会报错：Cannot access 'LOGIN' before initialization
 
@@ -257,7 +256,7 @@ action type 常量，若写在action.js里会报错：Cannot access 'LOGIN' befo
 
 
 
-#### action.js
+### action.js
 
 使用中间件编写Action Creator
 
@@ -328,7 +327,7 @@ export const logout = createAction(
 
 
 
-#### store.js
+### store.js
 
 ```react
 import { createStore, applyMiddleware } from 'redux';
@@ -342,6 +341,10 @@ const store = createStore(
 
 export default store
 ```
+
+
+
+
 
 
 
